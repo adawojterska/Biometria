@@ -86,9 +86,21 @@ class App:
         tab2 = ttk.Frame(notebook)
         notebook.add(tab2, text="Filtry")
 
-        ttk.Button(tab2, text="Filtr uśredniający").pack(fill="x", pady=5, padx=10)
-        ttk.Button(tab2, text="Filtr Gaussa").pack(fill="x", pady=5, padx=10)
-        ttk.Button(tab2, text="Filtr wyostrzający").pack(fill="x", pady=5, padx=10)
+        ttk.Button(
+            tab2,
+            text="Filtr uśredniający",
+            command=self.open_mean_filter_window
+        ).pack(fill="x", pady=5, padx=10)
+        ttk.Button(
+            tab2,
+            text="Filtr Gaussa",
+            command=self.open_gaussian_filter_window
+        ).pack(fill="x", pady=5, padx=10)
+        ttk.Button(
+            tab2,
+            text="Filtr wyostrzający",
+            command=self.apply_sharpen_filter
+        ).pack(fill="x", pady=5, padx=10)
 
         # --- Krawędzie
         tab3 = ttk.Frame(notebook)
@@ -180,12 +192,17 @@ class App:
         # Konwersja do formatu Tkinter
         self.tk_original_image = ImageTk.PhotoImage(self.original_image)
 
-        # Wyświetlenie
+        # Wyświetlenie oryginału
         self.original_canvas.delete("all")
         self.original_canvas.create_image(
             200, 200,
             image=self.tk_original_image
         )
+
+        # Wyczyść prawe okienko (przetworzony obraz)
+        self.processed_canvas.delete("all")
+        self.processed_image = None
+        self.tk_processed_image = None
 
     def apply_grayscale(self):
         if self.original_image is None:
@@ -368,5 +385,111 @@ class App:
         self.processed_canvas.create_image(
             200,
             200,
+            image=self.tk_processed_image
+        )
+
+    def open_mean_filter_window(self):
+        if self.original_image is None:
+            return
+
+        self.mean_window = tk.Toplevel(self.root)
+        self.mean_window.title("Filtr uśredniający")
+        self.mean_window.geometry("250x120")
+
+        ttk.Label(
+            self.mean_window,
+            text="Wartość środka (a)"
+        ).pack(pady=10)
+
+        # dozwolone wartości
+        self.mean_values = [0, 1, 2, 4, 12]
+
+        # combobox zamiast suwaka bo suwak się mulił
+        self.mean_combo = ttk.Combobox(
+            self.mean_window,
+            values=self.mean_values,
+            state="readonly"
+        )
+        self.mean_combo.set(1)  # domyślnie 1
+        self.mean_combo.pack(pady=5)
+
+        self.mean_combo.bind("<<ComboboxSelected>>", self.update_mean_filter)
+            
+    def update_mean_filter(self, event):
+        if self.original_image is None:
+            return
+
+        a = int(self.mean_combo.get())
+
+        self.processed_image = processing.mean_filter(self.original_image, a)
+
+        display_img = self.processed_image.copy()
+        display_img.thumbnail((400, 400))
+
+        self.tk_processed_image = ImageTk.PhotoImage(display_img)
+
+        self.processed_canvas.delete("all")
+        self.processed_canvas.create_image(
+            200, 200,
+            image=self.tk_processed_image
+        )
+    def open_gaussian_filter_window(self):
+        if self.original_image is None:
+            return
+
+        self.gaussian_window = tk.Toplevel(self.root)
+        self.gaussian_window.title("Filtr Gaussa")
+        self.gaussian_window.geometry("250x120")
+
+        ttk.Label(
+            self.gaussian_window,
+            text="Wybierz wartość b"
+        ).pack(pady=10)
+
+        # dozwolone wartości b
+        self.gaussian_values = [1, 2, 3, 4]
+
+        # combobox zamiast przycisku
+        self.gaussian_combo = ttk.Combobox(
+            self.gaussian_window,
+            values=self.gaussian_values,
+            state="readonly"
+        )
+        self.gaussian_combo.set(1)  # domyślnie 1
+        self.gaussian_combo.pack(pady=5)
+
+        # Aktualizacja obrazu przy każdej zmianie comboboxa
+        self.gaussian_combo.bind("<<ComboboxSelected>>", self.update_gaussian_filter)
+
+
+    def update_gaussian_filter(self, event):
+        if self.original_image is None:
+            return
+
+        b = int(self.gaussian_combo.get())
+        self.processed_image = processing.gaussian_filter(self.original_image, b)
+
+        display_img = self.processed_image.copy()
+        display_img.thumbnail((400, 400))
+        self.tk_processed_image = ImageTk.PhotoImage(display_img)
+
+        self.processed_canvas.delete("all")
+        self.processed_canvas.create_image(
+            200, 200,
+            image=self.tk_processed_image
+        )
+    def apply_sharpen_filter(self):
+        if self.original_image is None:
+            return
+
+        self.processed_image = processing.sharpen_filter(self.original_image)
+
+        display_img = self.processed_image.copy()
+        display_img.thumbnail((400, 400))
+        self.tk_processed_image = ImageTk.PhotoImage(display_img)
+
+        self.processed_canvas.delete("all")
+        self.processed_canvas.create_image(
+            200, 200,
             image=self.tk_processed_image
         )
