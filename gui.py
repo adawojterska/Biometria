@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import processing
+import histogram
 
 
 class App:
@@ -159,18 +160,19 @@ class App:
 
         ttk.Label(histogram_frame, text="Kanał:").pack(pady=5)
 
-        channel_var = tk.StringVar(value="Gray")
+        self.channel_var = tk.StringVar(value="Gray")
 
         channel_menu = ttk.Combobox(
             histogram_frame,
-            textvariable=channel_var,
-            values=["RGB", "R", "G", "B", "Gray"],
+            textvariable= self.channel_var,
+            values=["R", "G", "B", "Gray"],
             state="readonly"
         )
         channel_menu.pack(pady=5)
+        channel_menu.bind("<<ComboboxSelected>>", lambda e: self.update_histogram())
 
-        hist_canvas = tk.Canvas(histogram_frame, width=350, height=350, bg="white")
-        hist_canvas.pack(padx=10, pady=10)
+        self.hist_canvas = tk.Canvas(histogram_frame, width=350, height=350, bg="white")
+        self.hist_canvas.pack(padx=10, pady=10)
 
     def run(self):
         self.root.mainloop()
@@ -183,13 +185,10 @@ class App:
         if not file_path:
             return
 
-        # Wczytaj obraz
         self.original_image = Image.open(file_path).convert("RGB")
 
-        # Dopasuj do rozmiaru canvas
         self.original_image.thumbnail((400, 400))
 
-        # Konwersja do formatu Tkinter
         self.tk_original_image = ImageTk.PhotoImage(self.original_image)
 
         # Wyświetlenie oryginału
@@ -199,10 +198,12 @@ class App:
             image=self.tk_original_image
         )
 
-        # Wyczyść prawe okienko (przetworzony obraz)
+        # Wyczyść przetworzony obraz
         self.processed_canvas.delete("all")
         self.processed_image = None
         self.tk_processed_image = None
+
+        self.update_histogram()
 
     def apply_grayscale(self):
         if self.original_image is None:
@@ -221,6 +222,7 @@ class App:
             200, 200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
 
 
     def open_brightness_window(self):
@@ -269,6 +271,7 @@ class App:
             200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
 
     def open_contrast_window(self):
         if self.original_image is None:
@@ -319,6 +322,7 @@ class App:
             200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
     
     def apply_negative(self):
         if self.original_image is None:
@@ -339,6 +343,7 @@ class App:
             200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
 
     def open_threshold_window(self):
         if self.original_image is None:
@@ -365,6 +370,7 @@ class App:
         self.threshold_scale.set(127)
         self.threshold_scale.pack(pady=10)
 
+
     def update_threshold(self, value):
         if self.original_image is None:
             return
@@ -387,6 +393,7 @@ class App:
             200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
 
     def open_mean_filter_window(self):
         if self.original_image is None:
@@ -414,6 +421,7 @@ class App:
         self.mean_combo.pack(pady=5)
 
         self.mean_combo.bind("<<ComboboxSelected>>", self.update_mean_filter)
+
             
     def update_mean_filter(self, event):
         if self.original_image is None:
@@ -433,6 +441,7 @@ class App:
             200, 200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
     def open_gaussian_filter_window(self):
         if self.original_image is None:
             return
@@ -478,6 +487,8 @@ class App:
             200, 200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
+
     def apply_sharpen_filter(self):
         if self.original_image is None:
             return
@@ -493,3 +504,53 @@ class App:
             200, 200,
             image=self.tk_processed_image
         )
+        self.update_histogram()
+
+    def update_histogram(self):
+        if self.processed_image is None and self.original_image is None:
+            return
+
+        # Wybór obrazu do analizy (przetworzony ma pierwszeństwo)
+        img_to_analyze = self.processed_image if self.processed_image else self.original_image
+        
+        channel = self.channel_var.get()
+        
+        calc_channel = channel if channel in ["R", "G", "B"] else "Gray"
+        try:
+            hist_data = histogram.calculate_histogram(img_to_analyze, calc_channel)
+        except Exception as e:
+            print(f"Błąd obliczeń: {e}")
+            return
+
+        self.hist_canvas.delete("all")
+        canvas_w = 350
+        canvas_h = 350
+        
+        # Skalowanie wysokości
+        max_val = max(hist_data) if max(hist_data) > 0 else 1
+        bar_width = canvas_w / 256
+        
+        # 5. Rysowanie 256 słupków
+        for i in range(256):
+            # Wysokość słupka
+            bar_h = (hist_data[i] / max_val) * (canvas_h - 20)
+            
+            x0 = i * bar_width
+            y0 = canvas_h
+            x1 = (i + 1) * bar_width
+            y1 = canvas_h - bar_h
+            
+            # LOGIKA KOLORÓW:
+            if channel == "R":
+                color = f"#{i:02x}0000" 
+            elif channel == "G":
+                color = f"#00{i:02x}00" 
+            elif channel == "B":
+                color = f"#0000{i:02x}" 
+            else:
+                val_hex = f"{i:02x}"
+                color = f"#{val_hex}{val_hex}{val_hex}"
+            
+            self.hist_canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline=color)
+
+        self.hist_canvas.create_rectangle(0, 0, canvas_w, canvas_h, outline="#CCCCCC")
