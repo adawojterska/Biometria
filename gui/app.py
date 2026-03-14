@@ -8,6 +8,7 @@ from processing.convolution import convolution
 from processing.filters import mean_filter, gaussian_filter, sharpen_filter
 from processing.edges import prewitt, sobel, roberts
 from analysis.histogram import calculate_histogram
+from processing.morphology import dilation, erosion, opening, closing
 
 class App:
     def __init__(self):
@@ -205,8 +206,35 @@ class App:
             self.add_to_history(f"Własny filtr {len(kernel)}x{len(kernel)}")
 
         ttk.Button(tab4, text="Zastosuj filtr", command=apply_custom_filter_gui).pack(pady=10)
+        # --- Morfologia
+        tab5 = ttk.Frame(notebook)
+        notebook.add(tab5, text="Morfologia")
+        # --- Wybór trybu kolorów dla operacji morfologicznych
+        ttk.Label(tab5, text="Tryb kolorów przed operacją:").pack(pady=(10, 0), padx=10)
 
-        # Domyślny obraz Lena
+        self.color_mode_var = tk.StringVar(value="Czarno-białe")
+        color_options = [ "Szarości", "Czarno-białe"]
+        ttk.Combobox(tab5, textvariable=self.color_mode_var, values=color_options, state="readonly").pack(pady=5, padx=10)
+        ttk.Button(tab5, text="Dylatacja",
+                command=lambda: self.apply_operation_with_history(
+                    lambda img: dilation(img, mode=self.color_mode_var.get()), "Dylatacja")
+                ).pack(fill="x", pady=5, padx=10)
+
+        ttk.Button(tab5, text="Erozja",
+                command=lambda: self.apply_operation_with_history(
+                    lambda img: erosion(img, mode=self.color_mode_var.get()), "Erozja")
+                ).pack(fill="x", pady=5, padx=10)
+
+        ttk.Button(tab5, text="Otwarcie",
+                command=lambda: self.apply_operation_with_history(
+                    lambda img: opening(img, mode=self.color_mode_var.get()), "Otwarcie")
+                ).pack(fill="x", pady=5, padx=10)
+
+        ttk.Button(tab5, text="Zamknięcie",
+                command=lambda: self.apply_operation_with_history(
+                    lambda img: closing(img, mode=self.color_mode_var.get()), "Zamknięcie")
+                ).pack(fill="x", pady=5, padx=10)
+                # Domyślny obraz Lena
         self.load_default_image()
 
     # ================= FUNKCJE =================
