@@ -135,13 +135,13 @@ class App:
         channel_menu = ttk.Combobox(
             histogram_frame,
             textvariable=self.channel_var,
-            values=["R", "G", "B", "Gray"],
+            values=["R", "G", "B", "Gray", "Proj. Pozioma", "Proj. Pionowa"],
             state="readonly"
         )
         channel_menu.pack(pady=5)
         channel_menu.bind("<<ComboboxSelected>>", lambda e: self.update_histogram())
 
-        self.hist_canvas = tk.Canvas(histogram_frame, width=350, height=350, bg="white")
+        self.hist_canvas = tk.Canvas(histogram_frame, width=300, height=350, bg="white")
         self.hist_canvas.pack(padx=10, pady=10)
 
         # --- Własny filtr z dynamiczną maską
@@ -390,31 +390,43 @@ class App:
             return
         if img is None:
             img = self.processed_image if self.processed_image else self.original_image
+        
         channel = self.channel_var.get()
-        hist_data = calculate_histogram(img, channel)
         self.hist_canvas.delete("all")
-        canvas_w, canvas_h = 350, 350
-        max_val = max(hist_data) if max(hist_data) > 0 else 1
-        bar_width = canvas_w / 256
+        canvas_w, canvas_h = 290, 350
 
-        if channel == "R":
-            color = "#FF0000"
-        elif channel == "G":
-            color = "#00FF00"
-        elif channel == "B":
-            color = "#0000FF"
+        # Decydujemy co obliczyć
+        if "Proj." in channel:
+            from analysis.histogram import calculate_projection
+            mode = 'horizontal' if "Pozioma" in channel else 'vertical'
+            data = calculate_projection(img, mode)
+            color = "#555555" # Inny kolor dla projekcji
         else:
-            color = "#808080"
+            from analysis.histogram import calculate_histogram
+            data = calculate_histogram(img, channel)
+            colors = {"R": "#FF0000", "G": "#00FF00", "B": "#0000FF", "Gray": "#808080"}
+            color = colors.get(channel, "#808080")
 
-        for i in range(256):
-            bar_h = (hist_data[i] / max_val) * (canvas_h - 20)
-            x0, y0 = i * bar_width, canvas_h
-            x1, y1 = (i + 1) * bar_width, canvas_h - bar_h
-            self.hist_canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline=color)
+        num_elements = len(data)
+        max_val = max(data) if max(data) > 0 else 1
+        
+        # Skalowanie, by wszystko zmieściło się w Canvasie 350x350
+        margin = 10
+        draw_width = canvas_w - 2 * margin
+        bar_width = draw_width / num_elements
+        
+        for i in range(num_elements):
+            bar_h = (data[i] / max_val) * (canvas_h - 40)
+            x0 = margin + (i * bar_width)
+            y0 = canvas_h - 10
+            x1 = x0 + bar_width
+            y1 = y0 - bar_h
+            
+            # Przy dużej ilości danych (np. szerokość 1920px) rysujemy linie zamiast prostokątów
+            self.hist_canvas.create_line(x0, y0, x0, y1, fill=color)
 
-        self.hist_canvas.create_rectangle(0, 0, canvas_w, canvas_h, outline="#CCCCCC")
+        self.hist_canvas.create_rectangle(2, 2, canvas_w-2, canvas_h-2, outline="#CCCCCC")
 
-
-if __name__ == "__main__":
-    app = App()
-    app.run()
+    if __name__ == "__main__":
+        app = App()
+        app.run()
