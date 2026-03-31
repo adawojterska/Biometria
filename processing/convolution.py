@@ -1,29 +1,40 @@
 from PIL import Image
 
-def clamp(val):
-    return max(0, min(255, int(val)))
+def clamp(value):
+    return max(0, min(255, int(value)))
 
 def convolution(image: Image.Image, kernel: list) -> Image.Image:
     width, height = image.size
-    new_image = Image.new("RGB", (width, height))
-    pixels = image.load()
-    new_pixels = new_image.load()
+    output_image = Image.new("RGB", (width, height))
+    input_pixels = image.load()
+    output_pixels = output_image.load()
 
-    size = len(kernel)
-    offset = size // 2  
+    kernel_size = len(kernel)
+    a = kernel_size // 2
 
-    for y in range(offset, height - offset):
-        for x in range(offset, width - offset):
+    # Oblicz sumę wag kernela
+    kernel_sum = sum(sum(row) for row in kernel)
+    if kernel_sum == 0:
+        kernel_sum = 1  
+
+    for y in range(a, height - a):
+        for x in range(a, width - a):
             r_sum = g_sum = b_sum = 0.0
-            for ky in range(size):
-                for kx in range(size):
-                    px = x + kx - offset
-                    py = y + ky - offset
-                    r, g, b = pixels[px, py]
-                    k = kernel[ky][kx]
-                    r_sum += r * k
-                    g_sum += g * k
-                    b_sum += b * k
-            new_pixels[x, y] = (clamp(r_sum), clamp(g_sum), clamp(b_sum))
+            for j in range(kernel_size):
+                for i in range(kernel_size):
+                    xi = x + i - a
+                    yj = y + j - a
+                    input_r, input_g, input_b = input_pixels[xi, yj]
+                    weight = kernel[j][i]
+                    r_sum += input_r * weight
+                    g_sum += input_g * weight
+                    b_sum += input_b * weight
 
-    return new_image
+            # Normalizacja przez sumę wag
+            r_sum /= kernel_sum
+            g_sum /= kernel_sum
+            b_sum /= kernel_sum
+
+            output_pixels[x, y] = (clamp(r_sum), clamp(g_sum), clamp(b_sum))
+
+    return output_image

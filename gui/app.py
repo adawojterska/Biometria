@@ -208,7 +208,7 @@ class App:
         ttk.Button(tab4, text="Zastosuj filtr", command=apply_custom_filter_gui).pack(pady=10)
         # --- Morfologia
         tab5 = ttk.Frame(notebook)
-        notebook.add(tab5, text="Morfologia")
+        notebook.add(tab5, text="Operacje morfologiczne")
         # --- Wybór trybu kolorów dla operacji morfologicznych
         ttk.Label(tab5, text="Tryb kolorów przed operacją:").pack(pady=(10, 0), padx=10)
 

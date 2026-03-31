@@ -4,23 +4,20 @@ from .convolution import convolution
 # uwzględniamy możliwość dodania wagi do środka filtra, aby bardziej uwzględnić wartość centralnego piksela
 # było tak na slajdzie
 def mean_filter(image, a=1):
-    w = 8 + a
     kernel = [
-        [1/w, 1/w, 1/w],
-        [1/w, a/w, 1/w],
-        [1/w, 1/w, 1/w]
+        [1, 1, 1],
+        [1, a, 1],
+        [1, 1, 1]
     ]
     return convolution(image, kernel)
 
 def gaussian_filter(image, b=1):
     kernel = [
         [1, b, 1],
-        [b, 2*b, b],
+        [b, b**2, b],
         [1, b, 1]
     ]
-    w = sum(sum(row) for row in kernel)
-    kernel_normalized = [[x/w for x in row] for row in kernel]
-    return convolution(image, kernel_normalized)
+    return convolution(image, kernel)
 
 #https://medium.com/skylar-salernos-tech-blog/image-convolution-filters-explained-c878f1056e78
 def sharpen_filter(image):
