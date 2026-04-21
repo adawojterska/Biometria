@@ -9,14 +9,14 @@ def projection_y(img):
 
 
 # ===== ŚRODEK =====
-def find_center(img):
-    proj_x = projection_x(img)
-    proj_y = projection_y(img)
-
-    cx = np.argmax(proj_x)
-    cy = np.argmax(proj_y)
-
-    return cx, cy
+#def find_center(img):
+#    proj_x = projection_x(img)
+#    proj_y = projection_y(img)
+#
+#    cx = np.argmax(proj_x)
+#    cy = np.argmax(proj_y)
+#
+#    return cx, cy
 
 
 # # ===== PROMIEŃ =====
@@ -87,30 +87,30 @@ def get_projection_at_angle(img, angle):
     
     return original_coords[0], original_coords[1]
 
-# def find_center(img):
-#     if not np.any(img == 255):
-#         return 0, 0
+def find_center(img):
+    if not np.any(img == 255):
+        return 0, 0
 
-#     points_x = []
-#     points_y = []
+    points_x = []
+    points_y = []
 
-#     # 1. Standardowe przecięcie (0 i 90 stopni)
-#     p0_x, p0_y = get_projection_at_angle(img, 0)
-#     points_x.append(p0_x)
-#     points_y.append(p0_y)
+    # 1. Standardowe przecięcie (0 i 90 stopni)
+    p0_x, p0_y = get_projection_at_angle(img, 0)
+    points_x.append(p0_x)
+    points_y.append(p0_y)
 
-#     # 2. Przecięcie pod kątem 45 stopni
-#     p45_x, p45_y = get_projection_at_angle(img, 45)
-#     points_x.append(p45_x)
-#     points_y.append(p45_y)
+    # 2. Przecięcie pod kątem 45 stopni
+    p45_x, p45_y = get_projection_at_angle(img, 45)
+    points_x.append(p45_x)
+    points_y.append(p45_y)
     
-#     # Możesz dodać więcej kątów (np. 30, 60), aby zwiększyć precyzję
-#     p30_x, p30_y = get_projection_at_angle(img, 30)
-#     points_x.append(p30_x)
-#     points_y.append(p30_y)
+    # Możesz dodać więcej kątów (np. 30, 60), aby zwiększyć precyzję
+    p30_x, p30_y = get_projection_at_angle(img, 30)
+    points_x.append(p30_x)
+    points_y.append(p30_y)
 
-#     # 3. Obliczamy średnią ze wszystkich znalezionych punktów przecięcia
-#     cx = int(np.mean(points_x))
-#     cy = int(np.mean(points_y))
+    # 3. Obliczamy średnią ze wszystkich znalezionych punktów przecięcia
+    cx = int(np.mean(points_x))
+    cy = int(np.mean(points_y))
 
-#     return cx, cy
+    return cx, cy
