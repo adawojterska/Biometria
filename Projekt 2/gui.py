@@ -10,6 +10,10 @@ from image_ops import to_grayscale_luminance, threshold
 from projections import find_center, find_radius
 from iris_engine import IrisProcessor
 
+from daugman import prepare_radial_bands, encode_iris_image, hamming_distance
+
+
+
 # --- REDUKCJA WYMIARÓW ---
 BIG_IMG_W = 380
 BIG_IMG_H = 190
@@ -33,6 +37,9 @@ class IrisGUI:
 
         self.morph_ops_pupil = []
         self.morph_ops_iris = []
+        self.iris_code1 = None
+        self.iris_code2 = None
+        
 
         self.samples = [
             ("sample1.jpg", 50, 20), ("sample2.jpg", 50, 20),
@@ -85,6 +92,14 @@ class IrisGUI:
 
         top_frame = tk.Frame(self.compare_view, bg="#1e1e1e")
         top_frame.pack(pady=20)
+        self.hamming_global_label = tk.Label(
+            self.compare_view,
+            text="Hamming distance: -",
+            bg="#1e1e1e",
+            fg="white",
+            font=("Arial", 14, "bold")
+        )
+        self.hamming_global_label.pack(pady=10)
 
         # LEWA KOLUMNA
         left_col = tk.Frame(top_frame, bg="#1e1e1e")
@@ -110,6 +125,14 @@ class IrisGUI:
 
         self.unwrap_label1 = tk.Label(f1u, bg="black")
         self.unwrap_label1.pack(fill="both", expand=True)
+        f1c = tk.LabelFrame(left_col, text="Kod tęczówki", bg="#1e1e1e", fg="white",
+                    width=450, height=80)
+        f1c.pack(pady=5)
+        f1c.pack_propagate(False)
+
+        self.code_img1 = tk.Label(f1c, bg="black")
+        self.code_img1.pack(fill="both", expand=True)
+
 
         # PRAWA KOLUMNA
         right_col = tk.Frame(top_frame, bg="#1e1e1e")
@@ -134,6 +157,15 @@ class IrisGUI:
 
         self.unwrap_label2 = tk.Label(f2u, bg="black")
         self.unwrap_label2.pack(fill="both", expand=True)
+
+        f2c = tk.LabelFrame(right_col, text="Kod tęczówki", bg="#1e1e1e", fg="white",
+                    width=450, height=80)
+        f2c.pack(pady=5)
+        f2c.pack_propagate(False)
+
+        self.code_img2 = tk.Label(f2c, bg="black")
+        self.code_img2.pack(fill="both", expand=True)
+
 
         # ===== ORYGINALNY UI =====
         main_container = tk.Frame(self.main_view, bg="#1e1e1e")
@@ -258,6 +290,10 @@ class IrisGUI:
 
         xp = 50
         xi = 20
+        for s in self.samples:
+            if s[0] == filename:
+                xp, xi = s[1], s[2]
+                break
 
         pp = int(avg_b / (xp / 10))
         pi = int(avg_b / (xi / 10))
@@ -281,6 +317,40 @@ class IrisGUI:
 
         # ROZWINIĘCIE
         unwrapped = processor.unwrap(gray, cx, cy, rp, ri)
+        # ===== KOD TĘCZÓWKI =====
+        bands = prepare_radial_bands(unwrapped, num_bands=8)
+        code_img = encode_iris_image(bands)
+        code = code_img.flatten()
+
+        if which == 1:
+            self.iris_code1 = code
+        else:
+            self.iris_code2 = code
+        if self.iris_code1 is not None and self.iris_code2 is not None:
+            dist = hamming_distance(self.iris_code1, self.iris_code2)
+
+            self.hamming_global_label.config(
+                text=f"Hamming distance: {dist:.4f}"
+            )
+
+        code_vis = (code_img * 255).astype(np.uint8)
+
+        code_vis = cv2.resize(
+            code_vis,
+            (code_vis.shape[1] * 3, code_vis.shape[0] * 3),
+            interpolation=cv2.INTER_NEAREST
+        )
+
+        code_vis = Image.fromarray(code_vis)
+
+        tk_code = ImageTk.PhotoImage(code_vis)
+
+        if which == 1:
+            self.code_img1.config(image=tk_code)
+            self.code_img1.image = tk_code
+        else:
+            self.code_img2.config(image=tk_code)
+            self.code_img2.image = tk_code
 
         # WYŚWIETLENIE OKRĘGÓW
         img_pil = Image.fromarray(circles_img)
@@ -428,3 +498,4 @@ class IrisGUI:
 
         new_img.paste(img_pil, (x, y))
         return new_img
+    
