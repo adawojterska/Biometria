@@ -43,8 +43,8 @@ class IrisGUI:
 
         self.samples = [
             ("sample1.jpg", 50, 20), ("sample2.jpg", 50, 20),
-            ("sample3.jpg", 50, 14), ("sample4.jpg", 50, 14),
-            ("sample5.jpg", 50, 14),
+            ("sample3.jpg", 50, 14), ("sample4.jpg", 50, 16),
+            ("sample5.jpg", 50, 17),
         ]
 
         self.init_menu()
