@@ -60,57 +60,52 @@ def find_radius(img, cx, cy):
 
     return max_r
 
-import cv2
-
-def get_projection_at_angle(img, angle):
+def get_center_at_angle(img, angle_deg):
     h, w = img.shape
-    center = (w // 2, h // 2)
-    # Macierz obrotu
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    # Obracamy obraz binarny
-    rotated = cv2.warpAffine(img, M, (w, h))
+    # Pobieramy współrzędne wszystkich białych pikseli
+    y_indices, x_indices = np.where(img == 255)
     
-    # Zwracamy sumę białych pikseli w pionie (oś X) i poziomie (oś Y) dla obróconego obrazu
-    proj_x = np.sum(rotated == 255, axis=0)
-    proj_y = np.sum(rotated == 255, axis=1)
+    if len(x_indices) == 0:
+        return None
+
+    # Zamiana stopni na radiany
+    alpha = np.deg2rad(angle_deg)
     
-    # Wyznaczamy szczyty (argmax) w układzie obróconym
-    peak_x = np.argmax(proj_x)
-    peak_y = np.argmax(proj_y)
+    # 1. Rzutujemy punkty na nowe osie obrócone o kąt alpha
+    # x_prime to rzut pionowy pod kątem, y_prime to rzut poziomy pod kątem
+    x_prime = x_indices * np.cos(alpha) + y_indices * np.sin(alpha)
+    y_prime = -x_indices * np.sin(alpha) + y_indices * np.cos(alpha)
     
-    # Musimy teraz te współrzędne (peak_x, peak_y) przeliczyć z powrotem na układ 0 stopni
-    # Tworzymy wektor punktu
-    point = np.array([peak_x, peak_y, 1])
-    # Macierz odwrotna do obrotu
-    M_inv = cv2.getRotationMatrix2D(center, -angle, 1.0)
-    original_coords = M_inv @ point
+    # 2. Szukamy "szczytów" w nowym układzie (odpowiednik argmax na projekcji)
+    # Ponieważ nie mamy histogramu, używamy średniej lub mediany z rzutów 
+    # (jest to stabilniejsze niż szukanie najczęstszej wartości przy szumie)
+    peak_x_prime = np.median(x_prime)
+    peak_y_prime = np.median(y_prime)
     
-    return original_coords[0], original_coords[1]
+    # 3. Obracamy znaleziony punkt "szczytu" z powrotem do układu 0 stopni
+    # Używamy macierzy odwrotnej (obrót o -alpha)
+    cx = peak_x_prime * np.cos(-alpha) + peak_y_prime * np.sin(-alpha)
+    cy = -peak_x_prime * np.sin(-alpha) + peak_y_prime * np.cos(-alpha)
+    
+    return cx, cy
 
 def find_center(img):
     if not np.any(img == 255):
-        return 0, 0
+        return 130, 90 # Domyślny środek dla obrazka 260x180
 
-    points_x = []
-    points_y = []
+    # Zbieramy kandydatów na środek z różnych kątów
+    angles = [0, 30, 60, 90]
+    results_x = []
+    results_y = []
 
-    # 1. Standardowe przecięcie (0 i 90 stopni)
-    p0_x, p0_y = get_projection_at_angle(img, 0)
-    points_x.append(p0_x)
-    points_y.append(p0_y)
+    for a in angles:
+        res = get_center_at_angle(img, a)
+        if res:
+            results_x.append(res[0])
+            results_y.append(res[1])
 
-    # 2. Przecięcie pod kątem 45 stopni
-    p45_x, p45_y = get_projection_at_angle(img, 45)
-    points_x.append(p45_x)
-    points_y.append(p45_y)
-    
-    # Możesz dodać więcej kątów (np. 30, 60), aby zwiększyć precyzję
-    p30_x, p30_y = get_projection_at_angle(img, 30)
-    points_x.append(p30_x)
-    points_y.append(p30_y)
-
-    # 3. Obliczamy średnią ze wszystkich znalezionych punktów przecięcia
-    cx = int(np.mean(points_x))
-    cy = int(np.mean(points_y))
+    # Ostateczny środek to średnia z przecięć wszystkich par projekcji
+    cx = int(np.mean(results_x))
+    cy = int(np.mean(results_y))
 
     return cx, cy
