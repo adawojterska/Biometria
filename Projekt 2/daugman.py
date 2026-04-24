@@ -5,7 +5,7 @@ from PIL import Image
 # =========================
 # PARAMETR DOMYŚLNY DlA GABORA
 # =========================
-DEFAULT_F = 1 / 128
+DEFAULT_F = 1 / 32
 
 
 # =========================
@@ -89,20 +89,18 @@ def band_to_1d(band, points=128):
 # =========================
 
 def gabor_filter(signal, f=DEFAULT_F):
-    """
-    1D Gabor 
-    """
-
     sigma = 0.5 * np.pi * f
     lambd = 1 / f
 
     x = np.arange(len(signal)) - len(signal) / 2
 
     gaussian = np.exp(-(x ** 2) / (2 * sigma ** 2))
-    sinus = np.cos(2 * np.pi * x / lambd)
 
-    kernel = gaussian * sinus
-    kernel = kernel / (np.sum(np.abs(kernel)) )
+    real = np.cos(2 * np.pi * x / lambd)
+    imag = np.sin(2 * np.pi * x / lambd)
+
+    kernel = gaussian * (real + 1j * imag)
+    kernel = kernel / np.sum(np.abs(kernel))
 
     return np.convolve(signal, kernel, mode="same")
 
@@ -115,10 +113,10 @@ def encode_band(band, f=DEFAULT_F):
     signal = band_to_1d(band)
     filtered = gabor_filter(signal, f)
 
-    # stabilne binarne kodowanie (faza)
-    th = np.median(filtered)
+    real_bits = (filtered.real < 0).astype(np.uint8)
+    imag_bits = (filtered.imag < 0).astype(np.uint8)
 
-    return (filtered > th).astype(np.uint8)
+    return np.vstack([imag_bits, real_bits])  # 2 × 128
 
 
 # =========================
@@ -126,13 +124,13 @@ def encode_band(band, f=DEFAULT_F):
 # =========================
 
 def encode_iris(bands, f=DEFAULT_F):
-    codes = [encode_band(b, f) for b in bands]
-    return np.concatenate(codes)
+    code_img = encode_iris_image(bands, f)
+    return code_img.flatten()
 
 
 def encode_iris_image(bands, f=DEFAULT_F):
     codes = [encode_band(b, f) for b in bands]
-    return np.array(codes, dtype=np.uint8)
+    return np.vstack(codes)  # (16, 128)
 
 
 # =========================

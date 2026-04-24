@@ -316,9 +316,9 @@ class IrisGUI:
         cv2.circle(circles_img, (cx, cy), ri, (0, 255, 0), 2)
 
         # ROZWINIĘCIE
-        unwrapped = processor.unwrap(gray, cx, cy, rp, ri)
+        unwrapped = processor.unwrap(gray, cx, cy, rp, ri, out_h=120)
         # ===== KOD TĘCZÓWKI =====
-        bands = prepare_radial_bands(unwrapped, num_bands=8)
+        bands = prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.05)
         code_img = encode_iris_image(bands)
         code = code_img.flatten()
 
