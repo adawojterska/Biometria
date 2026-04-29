@@ -1,6 +1,6 @@
 import numpy as np
 
-# ===== PROJEKCJE =====
+# PROJEKCJE 
 def projection_x(img):
     return np.sum(img == 255, axis=0) #liczy biale w kazdej kolumnie
 
@@ -62,28 +62,25 @@ def find_radius(img, cx, cy):
 
 def get_center_at_angle(img, angle_deg):
     h, w = img.shape
-    # Pobieramy współrzędne wszystkich białych pikseli
+    # pobieramy współrzędne wszystkich białych pikseli
     y_indices, x_indices = np.where(img == 255)
     
     if len(x_indices) == 0:
         return None
 
-    # Zamiana stopni na radiany
     alpha = np.deg2rad(angle_deg)
     
-    # 1. Rzutujemy punkty na nowe osie obrócone o kąt alpha
+    # rzutujemy punkty na nowe osie obrócone o kąt alpha
     # x_prime to rzut pionowy pod kątem, y_prime to rzut poziomy pod kątem
     x_prime = x_indices * np.cos(alpha) + y_indices * np.sin(alpha)
     y_prime = -x_indices * np.sin(alpha) + y_indices * np.cos(alpha)
     
-    # 2. Szukamy "szczytów" w nowym układzie (odpowiednik argmax na projekcji)
-    # Ponieważ nie mamy histogramu, używamy średniej lub mediany z rzutów 
-    # (jest to stabilniejsze niż szukanie najczęstszej wartości przy szumie)
+    #szukamy środkowej wartości rzutów punktów w obróconym układzie.
+    #mediana wyznacza środek rozkładu i jest odporna na szum oraz odstające piksele.
     peak_x_prime = np.median(x_prime)
     peak_y_prime = np.median(y_prime)
     
-    # 3. Obracamy znaleziony punkt "szczytu" z powrotem do układu 0 stopni
-    # Używamy macierzy odwrotnej (obrót o -alpha)
+    #cofamy obrót- wracamy z układu obróconego do normalnego
     cx = peak_x_prime * np.cos(-alpha) + peak_y_prime * np.sin(-alpha)
     cy = -peak_x_prime * np.sin(-alpha) + peak_y_prime * np.cos(-alpha)
     
@@ -93,7 +90,7 @@ def find_center(img):
     if not np.any(img == 255):
         return 130, 90 # Domyślny środek dla obrazka 260x180
 
-    # Zbieramy kandydatów na środek z różnych kątów
+    # zbieramy kandydatów na środek z różnych kątów
     angles = [0, 30, 60, 90]
     results_x = []
     results_y = []

@@ -5,7 +5,6 @@ import numpy as np
 import cv2
 import os
 
-# Import modułów logicznych
 from image_ops import to_grayscale_luminance, threshold
 from projections import find_center, find_radius
 from iris_engine import IrisProcessor
@@ -14,12 +13,10 @@ from daugman import prepare_radial_bands, encode_iris_image, hamming_distance
 
 
 
-# --- REDUKCJA WYMIARÓW ---
 BIG_IMG_W = 380
 BIG_IMG_H = 190
 SIDE_IMG_W = 220
 SIDE_IMG_H = 140
-# -------------------------
 
 
 class IrisGUI:
@@ -50,8 +47,7 @@ class IrisGUI:
         self.init_menu()
         self.init_ui()
 
-    # ================= MENU =================
-
+    # --------------- MENU ---------------
     def init_menu(self):
         self.menubar = tk.Menu(self.root)
 
@@ -80,7 +76,7 @@ class IrisGUI:
         else:
             self.menubar.add_command(label="Analiza", command=self.show_main)
 
-    # ================= UI =================
+    # --------------- UI ---------------
 
     def init_ui(self):
         # --- ANALIZA ---
@@ -167,7 +163,7 @@ class IrisGUI:
         self.code_img2.pack(fill="both", expand=True)
 
 
-        # ===== ORYGINALNY UI =====
+        # ==========
         main_container = tk.Frame(self.main_view, bg="#1e1e1e")
         main_container.pack(fill="both", expand=True)
 
@@ -250,7 +246,7 @@ class IrisGUI:
                            fg="white", relief="flat", font=("Consolas", 8))
         self.log.pack(padx=10, pady=5, fill="both", expand=True)
 
-    # ================= PRZEŁĄCZANIE =================
+    # ---------------- PRZEŁĄCZANIE ----------------
 
     def show_compare(self):
         self.main_view.pack_forget()
@@ -262,7 +258,7 @@ class IrisGUI:
         self.main_view.pack(fill="both", expand=True)
         self.update_menu("main")
 
-    # ================= PORÓWNANIE =================
+    # ---------------- PORÓWNANIE ----------------
 
     def load_compare_image(self, which):
         if which == 1:
@@ -318,7 +314,7 @@ class IrisGUI:
         # ROZWINIĘCIE
         unwrapped = processor.unwrap(gray, cx, cy, rp, ri, out_h=120)
         # ===== KOD TĘCZÓWKI =====
-        bands = prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.05)
+        bands = prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.1)
         code_img = encode_iris_image(bands)
         code = code_img.flatten()
 

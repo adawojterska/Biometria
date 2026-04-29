@@ -5,7 +5,7 @@ from PIL import Image
 # =========================
 # PARAMETR DOMYŚLNY DlA GABORA
 # =========================
-DEFAULT_F = 1 / 32
+DEFAULT_F = 1 / 4
 
 
 # =========================

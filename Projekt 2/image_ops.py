@@ -11,7 +11,7 @@ def to_grayscale_luminance(img):
 
     return gray
 
-# ===== BINARYZACJA =====
+#  BINARYZACJA 
 def threshold(img, thresh):
     h, w = img.shape
     out = np.zeros((h, w), dtype=np.uint8)
@@ -25,7 +25,7 @@ def threshold(img, thresh):
 
     return out
 
-# ===== EROZJA (Kernel 7x7) =====
+# EROZJA (7x7)
 def erode(img):
     h, w = img.shape
     out = np.zeros_like(img)
@@ -45,7 +45,7 @@ def erode(img):
     return out
 
 
-# ===== DYLATACJA (Kernel 7x7) =====
+# DYLATACJA (7x7) 
 def dilate(img):
     h, w = img.shape
     out = np.zeros_like(img)
