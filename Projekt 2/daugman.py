@@ -8,11 +8,6 @@ DEFAULT_F = 1 / 4
 
 
 def prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.1):
-    """
-    8 współśrodkowych pasów (aproksymacja radialna)
-    + przycięcie góra/dół (rzęsy/powieki)
-    """
-
     h = unwrapped.shape[0]
     crop = int(h * crop_ratio)
 
@@ -20,7 +15,6 @@ def prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.1):
 
     h2 = cropped.shape[0]
 
-    # równomierne pasy (uprościenie radialności)
     band_edges = np.linspace(0, h2, num_bands + 1, dtype=int)
 
     bands = []
@@ -38,39 +32,24 @@ def gaussian_weights(size, sigma=0.5):
 
 
 def band_to_1d(band, points=128):
-    """
-    Radialna transformacja pas → 1D sygnał
-    """
-
     h, w = band.shape
-
-    # 128 równych segmentów (zgodnie z instrukcją)
-    segments = np.array_split(band, points, axis=1)
-
+    
+    resized_band = cv2.resize(band, (points, h), interpolation=cv2.INTER_AREA)
+    
     weights = gaussian_weights(h, sigma=0.5)
-
     values = []
 
-    for seg in segments:
-        # średnia w kierunku promienia
-        col_mean = np.mean(seg, axis=1)
-
-        # stabilizacja (usunięcie DC)
-        col_mean = col_mean - np.mean(col_mean)
-
-        # uśrednienie Gauss radialne
-        weighted = np.sum(col_mean * weights)
-
-        values.append(weighted)
+    for i in range(points):
+        col = resized_band[:, i].astype(np.float32)
+        weighted_val = np.sum(col * weights)
+        values.append(weighted_val)
 
     signal = np.array(values, dtype=np.float32)
 
-    # normalizacja (ważne dla Gabora)
     signal = signal - np.mean(signal)
     signal = signal / np.std(signal)
 
     return signal
-
 
 
 def gabor_filter(signal, f=DEFAULT_F):

@@ -25,17 +25,15 @@ def threshold(img, thresh):
 
     return out
 
-# EROZJA (7x7)
+# EROZJA 
 def erode(img):
     h, w = img.shape
     out = np.zeros_like(img)
 
-    # Margines musi wynosić 3, aby kernel 7x7 nie wyszedł poza obraz
     for y in range(3, h - 3):
         for x in range(3, w - 3):
 
             values = []
-            # Zakres od -3 do 3 daje 7 pikseli ( -3, -2, -1, 0, 1, 2, 3 )
             for j in range(-3, 4):
                 for i in range(-3, 4):
                     values.append(img[y + j, x + i])
@@ -45,7 +43,7 @@ def erode(img):
     return out
 
 
-# DYLATACJA (7x7) 
+# DYLATACJA  
 def dilate(img):
     h, w = img.shape
     out = np.zeros_like(img)

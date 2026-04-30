@@ -8,31 +8,6 @@ def projection_y(img):
     return np.sum(img == 255, axis=1) #liczy biale w kazdym wierszu
 
 
-# ===== ŚRODEK =====
-#def find_center(img):
-#    proj_x = projection_x(img)
-#    proj_y = projection_y(img)
-#
-#    cx = np.argmax(proj_x)
-#    cy = np.argmax(proj_y)
-#
-#    return cx, cy
-
-
-# # ===== PROMIEŃ =====
-# def find_radius(img, cx, cy):
-#     h, w = img.shape
-#     max_r = 0
-
-#     for y in range(h):
-#         for x in range(w):
-#             if img[y, x] == 255:
-#                 dist = int(np.sqrt((x - cx)**2 + (y - cy)**2))
-#                 if dist > max_r:
-#                     max_r = dist
-
-#     return max_r
-
 def find_radius(img, cx, cy):
     h, w = img.shape
     max_r = min(h, w) // 2

@@ -41,13 +41,12 @@ class IrisGUI:
         self.samples = [
             ("sample1.jpg", 50, 20), ("sample2.jpg", 50, 20),
             ("sample3.jpg", 50, 14), ("sample4.jpg", 50, 16),
-            ("sample5.jpg", 50, 17),
+            ("sample5.jpg", 50, 17), ("sample6.jpg", 50, 16)
         ]
 
         self.init_menu()
         self.init_ui()
 
-    # --------------- MENU ---------------
     def init_menu(self):
         self.menubar = tk.Menu(self.root)
 
@@ -76,7 +75,6 @@ class IrisGUI:
         else:
             self.menubar.add_command(label="Analiza", command=self.show_main)
 
-    # --------------- UI ---------------
 
     def init_ui(self):
         # --- ANALIZA ---
@@ -163,11 +161,9 @@ class IrisGUI:
         self.code_img2.pack(fill="both", expand=True)
 
 
-        # ==========
         main_container = tk.Frame(self.main_view, bg="#1e1e1e")
         main_container.pack(fill="both", expand=True)
 
-        # --- LEWY PANEL ---
         left_panel = tk.Frame(main_container, width=250, bg="#2b2b2b")
         left_panel.pack(side="left", fill="y", padx=10, pady=10)
         left_panel.pack_propagate(False)
@@ -211,7 +207,6 @@ class IrisGUI:
         self.labels["Oryginał"] = tk.Label(orig_container, bg="black")
         self.labels["Oryginał"].pack(fill="both", expand=True)
 
-        # --- ŚRODKOWY PANEL ---
         center_panel = tk.Frame(main_container, bg="#1e1e1e")
         center_panel.pack(side="left", fill="both", expand=True)
 
@@ -234,7 +229,6 @@ class IrisGUI:
             label.pack(fill="both", expand=True)
             self.labels[title] = label
 
-        # --- PRAWY PANEL ---
         right_panel = tk.Frame(main_container, width=280, bg="#2b2b2b")
         right_panel.pack(side="right", fill="y", padx=10)
         right_panel.pack_propagate(False)
@@ -246,7 +240,6 @@ class IrisGUI:
                            fg="white", relief="flat", font=("Consolas", 8))
         self.log.pack(padx=10, pady=5, fill="both", expand=True)
 
-    # ---------------- PRZEŁĄCZANIE ----------------
 
     def show_compare(self):
         self.main_view.pack_forget()
@@ -258,7 +251,6 @@ class IrisGUI:
         self.main_view.pack(fill="both", expand=True)
         self.update_menu("main")
 
-    # ---------------- PORÓWNANIE ----------------
 
     def load_compare_image(self, which):
         if which == 1:
@@ -311,9 +303,7 @@ class IrisGUI:
         cv2.circle(circles_img, (cx, cy), rp, (255, 0, 0), 2)
         cv2.circle(circles_img, (cx, cy), ri, (0, 255, 0), 2)
 
-        # ROZWINIĘCIE
         unwrapped = processor.unwrap(gray, cx, cy, rp, ri, out_h=120)
-        # ===== KOD TĘCZÓWKI =====
         bands = prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.1)
         code_img = encode_iris_image(bands)
         code = code_img.flatten()
@@ -348,7 +338,6 @@ class IrisGUI:
             self.code_img2.config(image=tk_code)
             self.code_img2.image = tk_code
 
-        # WYŚWIETLENIE OKRĘGÓW
         img_pil = Image.fromarray(circles_img)
         img_pil = self.resize_with_padding(img_pil, 300, 200)
 
@@ -356,14 +345,12 @@ class IrisGUI:
         label.config(image=tk_img)
         label.image = tk_img
 
-        # WYŚWIETLENIE ROZWINIĘCIA
         unwrap_pil = Image.fromarray(unwrapped)
         unwrap_pil = self.resize_with_padding(unwrap_pil, 300, 200)
 
         tk_unwrap = ImageTk.PhotoImage(unwrap_pil)
         unwrap_label.config(image=tk_unwrap)
         unwrap_label.image = tk_unwrap
-    # ================= LOGIKA =================
 
     def _process_new_image(self, path, is_sample=False):
         img = Image.open(path).convert("RGB")

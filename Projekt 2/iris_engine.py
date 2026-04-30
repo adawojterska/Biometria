@@ -17,7 +17,7 @@ class IrisProcessor:
 
     @staticmethod
     def unwrap(img, cx, cy, rp, ri, out_h=60, out_w=360):
-        # Implementacja rozwinięcia (Rubber Sheet Model)
+        # Implementacja rozwinięcia 
         res = np.zeros((out_h, out_w), dtype=np.uint8)
         for x in range(out_w):
             theta = 2 * np.pi * x / out_w
