@@ -2,15 +2,10 @@ import numpy as np
 import cv2
 from PIL import Image
 
-# =========================
-# PARAMETR DOMYŚLNY DlA GABORA
-# =========================
+
 DEFAULT_F = 1 / 4
 
 
-# =========================
-# 1. PASY RADIALNE \\
-# =========================
 
 def prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.1):
     """
@@ -35,19 +30,12 @@ def prepare_radial_bands(unwrapped, num_bands=8, crop_ratio=0.1):
     return bands
 
 
-# =========================
-# 2. OKNO GAUSSA (radialne)
-# =========================
-
 def gaussian_weights(size, sigma=0.5):
     x = np.linspace(-1, 1, size)
     g = np.exp(-(x ** 2) / (2 * sigma ** 2))
     return g / np.sum(g)
 
 
-# =========================
-# 3. 1D SYGNAŁ (POPRAWIONY ZGODNIE Z Uwagą 3)
-# =========================
 
 def band_to_1d(band, points=128):
     """
@@ -84,9 +72,6 @@ def band_to_1d(band, points=128):
     return signal
 
 
-# =========================
-# 4. GABOR 1D (zgodny z teorią)
-# =========================
 
 def gabor_filter(signal, f=DEFAULT_F):
     sigma = 0.5 * np.pi * f
@@ -105,9 +90,6 @@ def gabor_filter(signal, f=DEFAULT_F):
     return np.convolve(signal, kernel, mode="same")
 
 
-# =========================
-# 5. KODOWANIE PASA
-# =========================
 
 def encode_band(band, f=DEFAULT_F):
     signal = band_to_1d(band)
@@ -119,9 +101,6 @@ def encode_band(band, f=DEFAULT_F):
     return np.vstack([imag_bits, real_bits])  # 2 × 128
 
 
-# =========================
-# 6. IRIS CODE
-# =========================
 
 def encode_iris(bands, f=DEFAULT_F):
     code_img = encode_iris_image(bands, f)
@@ -133,9 +112,6 @@ def encode_iris_image(bands, f=DEFAULT_F):
     return np.vstack(codes)  # (16, 128)
 
 
-# =========================
-# 7. HAMMING DISTANCE
-# =========================
 
 def hamming_distance(code1, code2):
     return np.mean(code1 != code2)
