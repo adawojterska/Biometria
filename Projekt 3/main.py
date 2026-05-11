@@ -1,7 +1,7 @@
 import tkinter as tk
-from gui import BiometricGUI
+from gui.main_gui import GUI
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = BiometricGUI(root)
+    app = GUI(root)
     root.mainloop()
