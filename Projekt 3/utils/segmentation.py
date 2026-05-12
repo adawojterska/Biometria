@@ -8,7 +8,7 @@ from collections import deque
 #sekcja 2.1
 
 #ogolnie dziala mi lepiej global segmentattion tzn treshold staly dla kazdego boxa
-def segmentation_global(img, block_size=16, T_factor=0.2):
+def segmentation_global(img, block_size=4, T_factor=0.2):
 
     img = img.astype(np.float32)
 
