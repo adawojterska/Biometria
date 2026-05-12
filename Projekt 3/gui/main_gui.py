@@ -3,8 +3,14 @@ from PIL import Image, ImageTk
 import numpy as np
 from gui.fingerprint_window import open_fingerprint_window
 
-from processing.grayscale import to_grayscale
-from processing.histogram_equalization import histogram_equalization
+from utils.binarization import global_threshold
+from utils.gabor_filter import  get_orientation_map, simple_gabor
+from utils.grayscale import to_grayscale
+from utils.histogram_equalization import clahe, histogram_equalization
+from utils.morphology import opening
+from utils.normalization import normalize_fingerprint
+from utils.segmentation import segmentation, segmentation_global
+
 
 
 WINDOW_W = 1050
@@ -105,53 +111,6 @@ class GUI:
 
         self.placeholder_labels[title] = label
 
-    # =========================
-    # GRAYSCALE
-    # =========================
-    def to_grayscale(self, img):
-        h, w, _ = img.shape
-        gray = np.zeros((h, w), dtype=np.uint8)
-
-        for y in range(h):
-            for x in range(w):
-                r, g, b = img[y, x]
-                gray[y, x] = int(0.299*r + 0.587*g + 0.114*b)
-
-        return gray
-
-    # =========================
-    # HISTOGRAM EQUALIZATION
-    # =========================
-    def histogram_equalization(self, img):
-        h, w = img.shape
-        size = h * w
-
-        hist = [0] * 256
-
-        for y in range(h):
-            for x in range(w):
-                hist[img[y, x]] += 1
-
-        cdf = [0] * 256
-        cdf[0] = hist[0]
-
-        for i in range(1, 256):
-            cdf[i] = cdf[i - 1] + hist[i]
-
-        cdf_min = next(v for v in cdf if v > 0)
-
-        lut = [0] * 256
-
-        for i in range(256):
-            lut[i] = int((cdf[i] - cdf_min) / (size - cdf_min) * 255)
-
-        out = np.zeros((h, w), dtype=np.uint8)
-
-        for y in range(h):
-            for x in range(w):
-                out[y, x] = lut[img[y, x]]
-
-        return out
 
     # =========================
     # IMAGE APPLY (PIPELINE)
@@ -178,20 +137,34 @@ class GUI:
         # PROCESSING PIPELINE
         # =========================
         gray = to_grayscale(img_np)
-        enhanced = histogram_equalization(gray)
+        normalized = normalize_fingerprint(gray)
+        mask = segmentation_global(normalized, block_size=16, T_factor=0.4)
+        roi = normalized * mask
+        orient = get_orientation_map(normalized, block_size=16)        
+        gabor_img = simple_gabor(normalized, orient, freq=0.1, sigma=2.0) 
+        binary = global_threshold(gabor_img)
 
-        enhanced_pil = Image.fromarray(enhanced).resize((BOX_W, BOX_H))
-        tk_enhanced = ImageTk.PhotoImage(enhanced_pil)
+        binary_final = binary * mask
+        binary_final = opening(binary_final)
+
+        roi_pil = Image.fromarray(roi).resize((BOX_W, BOX_H))
+        tk_roi = ImageTk.PhotoImage(roi_pil)
 
         pre_box = self.placeholder_labels["Przetwarzanie wstępne"]
-        pre_box.config(image=tk_enhanced)
-        pre_box.image = tk_enhanced
+        pre_box.config(image=tk_roi)
+        pre_box.image = tk_roi
+
+        binary_pil = Image.fromarray(binary_final).resize((BOX_W, BOX_H))
+        tk_binary = ImageTk.PhotoImage(binary_pil)
+
+        bin_box = self.placeholder_labels["Binaryzacja"]
+        bin_box.config(image=tk_binary)
+        bin_box.image = tk_binary
 
         # =========================
         # EMPTY BOXES FOR NOW
         # =========================
         empty_boxes = [
-            "Binaryzacja",
             "Szkieletyzacja",
             "Poprawa szkieletyzacji",
             "Mapa minucji"
