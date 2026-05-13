@@ -83,3 +83,29 @@ class K3M:
                 changed = True
                         
         return img
+    
+def morphological_skeleton(binary_image):
+
+    img = binary_image.copy().astype(np.uint8)
+
+    skeleton = np.zeros_like(img)
+
+    while np.any(img):
+
+        # opening
+        opened = opening(img)
+
+        # różnica
+        temp = img - opened
+        temp[temp < 0] = 0
+
+        # dodanie do skeletonu
+        skeleton = np.logical_or(
+            skeleton,
+            temp
+        ).astype(np.uint8)
+
+            # erozja
+        img = erode(img)
+
+    return skeleton.astype(np.uint8)

@@ -1,6 +1,7 @@
-import cv2
+from collections import deque
+
 import numpy as np
-from math import sqrt
+from math import acos, degrees, sqrt
 
 
 def find_endpoints(skeleton):
@@ -29,6 +30,37 @@ def find_endpoints(skeleton):
                     endpoints.append((r, c, neighbors[0]))
 
     return endpoints
+
+
+def draw_line(img, x1, y1, x2, y2, value=1):
+    """
+    Rysowanie linii algorytmem Bresenhama bez cv2
+    """
+
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+
+    sx = 1 if x1 < x2 else -1
+    sy = 1 if y1 < y2 else -1
+
+    err = dx - dy
+
+    while True:
+
+        img[y1, x1] = value
+
+        if x1 == x2 and y1 == y2:
+            break
+
+        e2 = 2 * err
+
+        if e2 > -dy:
+            err -= dy
+            x1 += sx
+
+        if e2 < dx:
+            err += dx
+            y1 += sy
 
 
 def reconnect_lines(skeleton, max_distance=8):
@@ -87,12 +119,70 @@ def reconnect_lines(skeleton, max_distance=8):
 
             if dot1 > 0.8 and dot2 > 0.8:
 
-                cv2.line(
+                draw_line(
                     repaired,
-                    (x1, y1),
-                    (x2, y2),
-                    1,
-                    1
+                    x1, y1,
+                    x2, y2,
+                    value=1
                 )
 
     return repaired
+def remove_short_lines(skeleton, min_length=10):
+    """
+    Usuwa bardzo krótkie komponenty połączone (linie/szum)
+    """
+
+    cleaned = skeleton.copy()
+
+    rows, cols = cleaned.shape
+
+    visited = np.zeros_like(cleaned, dtype=bool)
+
+    directions = [
+        (-1, -1), (-1, 0), (-1, 1),
+        (0, -1),           (0, 1),
+        (1, -1),  (1, 0),  (1, 1)
+    ]
+
+    for r in range(rows):
+        for c in range(cols):
+
+            if cleaned[r, c] != 1 or visited[r, c]:
+                continue
+
+            # BFS
+            queue = deque()
+            queue.append((r, c))
+
+            component = []
+
+            visited[r, c] = True
+
+            while queue:
+
+                y, x = queue.popleft()
+
+                component.append((y, x))
+
+                for dy, dx in directions:
+
+                    ny = y + dy
+                    nx = x + dx
+
+                    if (
+                        0 <= ny < rows and
+                        0 <= nx < cols and
+                        cleaned[ny, nx] == 1 and
+                        not visited[ny, nx]
+                    ):
+
+                        visited[ny, nx] = True
+                        queue.append((ny, nx))
+
+            # usuwanie krótkich komponentów
+            if len(component) < min_length:
+
+                for y, x in component:
+                    cleaned[y, x] = 0
+
+    return cleaned
