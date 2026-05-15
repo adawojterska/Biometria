@@ -8,10 +8,9 @@ from gui.fingerprint_window import open_fingerprint_window
 from utils.binarization import global_threshold
 from utils.gabor_filter import get_orientation_map, simple_gabor
 from utils.grayscale import to_grayscale
-from utils.histogram_equalization import clahe, histogram_equalization
 from utils.morphology import opening
 from utils.normalization import normalize_fingerprint
-from utils.segmentation import segmentation, segmentation_global
+from utils.segmentation import segmentation_global
 from utils.skeletonization import K3M, morphological_skeleton
 from utils.skeleton_repair import reconnect_lines, remove_short_lines
 from utils.minutiae import detect_minutiae, draw_minutiae
@@ -22,7 +21,7 @@ WINDOW_W = 1050
 WINDOW_H = 780
 
 BOX_W = 260
-BOX_H = 300
+BOX_H = 290
 
 
 class GUI:
@@ -220,17 +219,104 @@ class GUI:
         # =========================
         # COMPARE TAB
         # =========================
-        tk.Label(
+        compare_container = tk.Frame(self.tab_compare, bg="#1e1e1e")
+        compare_container.place(relx=0.5, rely=0.5, anchor="center")
+        
+        
+        # =========================
+        # LEGEND (COMPARE TAB)
+        # =========================
+        legend = tk.Frame(
             self.tab_compare,
-            text="Porównanie metod skeletonizacji",
+            bg="#2a2a2a",
+            bd=1,
+            relief="solid"
+        )
+
+        legend.place(relx=0.88, rely=0.15, anchor="n")
+
+
+        tk.Label(
+            legend,
+            text="Legenda",
+            bg="#2a2a2a",
+            fg="white",
+            font=("Arial", 11, "bold")
+        ).pack(pady=(5, 5))
+
+
+        def legend_item(color, text):
+            row = tk.Frame(legend, bg="#2a2a2a")
+            row.pack(anchor="w", padx=8, pady=2)
+
+            canvas = tk.Canvas(
+                row,
+                width=12,
+                height=12,
+                bg="#2a2a2a",
+                highlightthickness=0
+            )
+            canvas.create_oval(2, 2, 10, 10, fill=color, outline=color)
+            canvas.pack(side="left")
+
+            tk.Label(
+                row,
+                text=text,
+                bg="#2a2a2a",
+                fg="white",
+                font=("Arial", 9)
+            ).pack(side="left", padx=6)
+
+
+        legend_item("red", "Bifurkacje")
+        legend_item("blue", "Zakończenia")
+
+        legend.place(relx=0.88, rely=0.15, anchor="n")
+
+        # tytuły kolumn
+        tk.Label(
+            compare_container,
+            text="K3M",
             bg="#1e1e1e",
             fg="white",
             font=("Arial", 14, "bold")
-        ).place(
-            relx=0.5,
-            rely=0.5,
-            anchor="center"
-        )
+        ).grid(row=0, column=0)
+
+        tk.Label(
+            compare_container,
+            text="Morfologiczna",
+            bg="#1e1e1e",
+            fg="white",
+            font=("Arial", 14, "bold")
+        ).grid(row=0, column=1)
+
+        def box(title, r, c):
+            frame = tk.LabelFrame(
+                compare_container,
+                text=title,
+                bg="#1e1e1e",
+                font=("Arial", 11, "bold"),
+                fg="white",
+                width=280,
+                height=320
+            )
+            frame.grid(row=r, column=c, padx=10, pady=10)
+            frame.grid_propagate(False)
+            frame.propagate(False)
+
+            
+
+            label = tk.Label(frame, bg="black")
+            label.pack(fill="both", expand=True)
+            return label
+
+
+        self.placeholder_labels_compare = {
+            "k3m_skel": box("Poprawa szkieletyzacji", 1, 0),
+            "k3m_min": box("Mapa minucji", 2, 0),
+            "morph_skel": box("Poprawa szkieletyzacji", 1, 1),
+            "morph_min": box("Mapa minucji", 2, 1),
+        }
 
     # =========================
     # PLACEHOLDER
@@ -251,7 +337,7 @@ class GUI:
             fg="white",
             font=("Arial", 11, "bold"),
             width=280,
-            height=340
+            height=320
         )
 
         frame.grid(
@@ -376,7 +462,10 @@ class GUI:
         repaired_k3m = remove_short_lines(
             repaired_k3m,
             min_length=4
+
         )
+
+        
 
         endings_k3m, bifurcations_k3m = detect_minutiae(
             repaired_k3m,
@@ -413,11 +502,11 @@ class GUI:
             skeleton_result_morph,
             max_distance=8
         )
-
+        
         repaired_morph = remove_short_lines(
             repaired_morph,
-            min_length=4
-        )
+            min_length=4)
+
 
         endings_morph, bifurcations_morph = detect_minutiae(
             repaired_morph,
@@ -506,4 +595,27 @@ class GUI:
             minutiae_morph,
             "Mapa minucji",
             self.placeholder_labels_morph
+        )
+        self.show_image(
+            repaired_display_k3m,
+            "k3m_skel",
+            self.placeholder_labels_compare
+        )
+
+        self.show_image(
+            minutiae_k3m,
+            "k3m_min",
+            self.placeholder_labels_compare
+        )
+
+        self.show_image(
+            repaired_display_morph,
+            "morph_skel",
+            self.placeholder_labels_compare
+        )
+
+        self.show_image(
+            minutiae_morph,
+            "morph_min",
+            self.placeholder_labels_compare
         )

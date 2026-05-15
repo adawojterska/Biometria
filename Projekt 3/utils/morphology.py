@@ -1,5 +1,6 @@
 import numpy as np
 
+
 #skopiowane z poprzednich projetkow
 def erode(img):
     h, w = img.shape
@@ -28,3 +29,43 @@ def opening(img):
 
 def closing(img):
     return erode(dilate(img))
+
+def erode_cross(img):
+
+    h, w = img.shape
+    out = np.zeros_like(img)
+
+    for y in range(1, h - 1):
+        for x in range(1, w - 1):
+
+            if (
+                img[y, x] == 1 and
+                img[y-1, x] == 1 and
+                img[y+1, x] == 1 and
+                img[y, x-1] == 1 and
+                img[y, x+1] == 1
+            ):
+                out[y, x] = 1
+
+    return out
+
+def dilate_cross(img):
+
+    h, w = img.shape
+    out = np.zeros_like(img)
+
+    for y in range(1, h - 1):
+        for x in range(1, w - 1):
+
+            if img[y, x] == 1:
+
+                out[y, x] = 1
+                out[y-1, x] = 1
+                out[y+1, x] = 1
+                out[y, x-1] = 1
+                out[y, x+1] = 1
+
+    return out
+
+def opening_cross(img):
+    return dilate_cross(erode_cross(img))

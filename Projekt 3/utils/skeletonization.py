@@ -1,5 +1,5 @@
 import numpy as np
-from utils.morphology import erode, dilate, opening, closing
+from utils.morphology import erode, dilate, erode_cross, opening, closing, opening_cross
 
 class K3M:
     def __init__(self):
@@ -83,7 +83,6 @@ class K3M:
                 changed = True
                         
         return img
-    
 def morphological_skeleton(binary_image):
 
     img = binary_image.copy().astype(np.uint8)
@@ -92,20 +91,16 @@ def morphological_skeleton(binary_image):
 
     while np.any(img):
 
-        # opening
-        opened = opening(img)
+        eroded = erode_cross(img)
 
-        # różnica
+        opened = opening_cross(img)
+
         temp = img - opened
         temp[temp < 0] = 0
 
-        # dodanie do skeletonu
-        skeleton = np.logical_or(
-            skeleton,
-            temp
-        ).astype(np.uint8)
+        skeleton = np.logical_or(skeleton, temp).astype(np.uint8)
 
-            # erozja
-        img = erode(img)
+        img = eroded
 
-    return skeleton.astype(np.uint8)
+    
+    return skeleton
