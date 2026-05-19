@@ -38,47 +38,47 @@ def segmentation_global(img, block_size=4, T_factor=0.2):
 
     return mask
 
-def segmentation(img, block_size=16, k=1.2):
+# def segmentation(img, block_size=16, k=1.2):
 
-    img = img.astype(np.float32)
+#     img = img.astype(np.float32)
 
-    h, w = img.shape
-    mask = np.zeros((h, w), dtype=np.uint8)
+#     h, w = img.shape
+#     mask = np.zeros((h, w), dtype=np.uint8)
 
-    block_stds = []
-    for y in range(0, h, block_size):
-        for x in range(0, w, block_size):
+#     block_stds = []
+#     for y in range(0, h, block_size):
+#         for x in range(0, w, block_size):
 
-            block = img[y:y+block_size, x:x+block_size]
+#             block = img[y:y+block_size, x:x+block_size]
 
-            if block.size == 0:
-                continue
+#             if block.size == 0:
+#                 continue
 
-            block_stds.append(np.std(block))
+#             block_stds.append(np.std(block))
 
-    block_stds = np.array(block_stds)
-    mean_std = np.mean(block_stds)
-    threshold = k * mean_std
-    idx = 0
+#     block_stds = np.array(block_stds)
+#     mean_std = np.mean(block_stds)
+#     threshold = k * mean_std
+#     idx = 0
 
-    for y in range(0, h, block_size):
-        for x in range(0, w, block_size):
+#     for y in range(0, h, block_size):
+#         for x in range(0, w, block_size):
 
-            block = img[y:y+block_size, x:x+block_size]
+#             block = img[y:y+block_size, x:x+block_size]
 
-            if block.size == 0:
-                continue
+#             if block.size == 0:
+#                 continue
 
-            if block_stds[idx] > threshold:
-                mask[y:y+block_size, x:x+block_size] = 1
+#             if block_stds[idx] > threshold:
+#                 mask[y:y+block_size, x:x+block_size] = 1
 
-            idx += 1
+#             idx += 1
 
-    mask = keep_largest_component(mask)
-    mask  = fill_holes(mask)
-    mask = add_margin(mask, margin=8)
+#     mask = keep_largest_component(mask)
+#     mask  = fill_holes(mask)
+#     mask = add_margin(mask, margin=8)
 
-    return mask
+#     return mask
 
 
 def keep_largest_component(mask):

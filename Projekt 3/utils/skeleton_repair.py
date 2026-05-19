@@ -1,7 +1,7 @@
 from collections import deque
 
 import numpy as np
-from math import acos, degrees, sqrt
+from math import sqrt
 
 
 def find_endpoints(skeleton):
