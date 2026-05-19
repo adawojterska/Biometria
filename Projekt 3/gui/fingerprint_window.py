@@ -27,7 +27,7 @@ def open_fingerprint_window(root, on_apply_callback):
 
     window.configure(bg="#1e1e1e")
 
-    folder = "odciski_zdjecia"
+    folder = "fingerprints"
 
     if not os.path.exists(folder):
         tk.Label(window, text="Brak folderu", fg="white", bg="#1e1e1e").pack()
